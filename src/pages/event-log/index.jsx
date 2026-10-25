@@ -7,8 +7,8 @@ export default function EventLog() {
 
   return (
     <EventsTable
-      title="Event log"
-      subtitle="Every MQTT event received during this session, searchable and filterable"
+      title="Riwayat Kejadian"
+      subtitle="Semua kejadian MQTT yang diterima selama sesi ini, dapat dicari dan disaring"
       pageSize={10}
       filter={filter}
       onFilterChange={setFilter}

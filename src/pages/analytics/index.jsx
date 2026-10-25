@@ -13,8 +13,8 @@ export default function Analytics() {
   return (
     <>
       <PageHeader
-        title="Gas Analytics"
-        subtitle="Concentration trends and the current live reading"
+        title="Analisis Gas"
+        subtitle="Tren tingkat gas dan pembacaan perangkat saat ini"
         range={range}
         onRangeChange={setRange}
         onExport={() =>

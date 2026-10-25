@@ -1,4 +1,11 @@
-import { formatDateTime, formatDuration, eventDuration } from "./iot.js";
+import {
+  eventDuration,
+  formatDateTime,
+  formatDuration,
+  getEventDisplay,
+  RANGES,
+  STATUS_META,
+} from "./iot.js";
 
 function escapeCell(value) {
   const text = value == null ? "" : String(value);
@@ -29,50 +36,54 @@ function stamp(now) {
 export function exportEvents(events, now) {
   const rows = [
     [
-      "Event ID",
-      "Boot",
-      "Device",
-      "Date",
-      "Type",
-      "Title",
+      "ID Kejadian",
+      "ID Sesi Perangkat",
+      "Perangkat",
+      "Tanggal",
+      "Jenis",
+      "Judul",
       "Detail",
-      "Source",
-      "Category",
-      "State",
+      "Sumber",
+      "Kategori",
+      "Status",
       "Gas (%)",
-      "Duration",
+      "Durasi",
     ],
-    ...events.map((event) => [
-      event.id,
-      event.boot,
-      event.device,
-      formatDateTime(event.time),
-      event.type,
-      event.title,
-      event.detail,
-      event.source,
-      event.category,
-      event.state,
-      event.gas ?? "",
-      formatDuration(eventDuration(event, now)),
-    ]),
+    ...events.map((event) => {
+      const display = getEventDisplay(event);
+      return [
+        event.id,
+        event.boot,
+        event.device,
+        formatDateTime(event.time),
+        event.type,
+        display.title,
+        display.detail,
+        display.source,
+        display.category,
+        display.state,
+        event.gas ?? "",
+        formatDuration(eventDuration(event, now)),
+      ];
+    }),
   ];
 
-  download(`gas-events-${stamp(now)}.csv`, rows);
+  download(`kejadian-gas-${stamp(now)}.csv`, rows);
 }
 
 export function exportHistory(bins, range) {
   const rows = [
-    ["Interval start", "Interval end", "Peak gas (%)", "Average gas (%)", "Samples", "Status"],
+    ["Awal interval", "Akhir interval", "Puncak gas (%)", "Rata-rata gas (%)", "Sampel", "Status"],
     ...bins.map((bin) => [
       formatDateTime(bin.start),
       formatDateTime(bin.end),
       bin.peak,
       bin.average,
       bin.samples,
-      bin.status || "",
+      STATUS_META[bin.status]?.label || bin.status || "",
     ]),
   ];
 
-  download(`gas-history-${range}-${stamp(Date.now())}.csv`, rows);
+  const label = RANGES[range]?.short.replace(" ", "") || range;
+  download(`riwayat-gas-${label}-${stamp(Date.now())}.csv`, rows);
 }

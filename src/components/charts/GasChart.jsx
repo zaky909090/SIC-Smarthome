@@ -13,21 +13,21 @@ import {
 const THRESHOLDS = [
   {
     value: 60,
-    label: "Danger",
+    label: "Bahaya",
     line: "border-status-danger/70",
     pill: "bg-status-danger-strong text-white",
     text: "text-status-danger-strong",
   },
   {
     value: 50,
-    label: "Warning",
+    label: "Peringatan",
     line: "border-status-warning/70",
     pill: "bg-status-warning-strong text-white",
     text: "text-status-warning-strong",
   },
   {
     value: 20,
-    label: "Safe",
+    label: "Aman",
     line: "border-status-normal/70",
     pill: "bg-status-normal-strong text-white",
     text: "text-status-normal-strong",
@@ -46,19 +46,19 @@ function BarTooltip({ bin }) {
   const status = bin.status ? STATUS_META[bin.status] : null;
 
   return (
-    <div className="animate-tooltip-in pointer-events-none w-44 rounded-xl border border-border bg-white p-2.5 text-text-primary shadow-tooltip ring-1 ring-black/5">
+    <div className="animate-tooltip-in pointer-events-none w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-white p-2.5 text-text-primary shadow-tooltip ring-1 ring-black/5">
       <div className="flex items-center justify-between gap-2 border-b border-border pb-1.5 text-[11px]">
-        <span className="font-medium text-text-secondary">
+        <span className="shrink-0 whitespace-nowrap font-medium text-text-secondary">
           {formatInterval(bin.start, bin.end)}
         </span>
         <span
-          className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+          className={`shrink-0 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
             status
               ? TOOLTIP_STATUS[bin.status]
               : "bg-bg-subtle text-text-muted"
           }`}
         >
-          {status ? status.label : "No data"}
+          {status ? status.label : "Belum ada data"}
         </span>
       </div>
 
@@ -67,7 +67,7 @@ function BarTooltip({ bin }) {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1 text-text-secondary">
               <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
-              Peak
+              Puncak
             </span>
             <span className="font-mono font-bold tabular text-text-primary">
               {bin.peak}%
@@ -76,7 +76,7 @@ function BarTooltip({ bin }) {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1 text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary-container" />
-              Average
+              Rata-rata
             </span>
             <span className="font-mono font-bold tabular text-primary">
               {bin.average}%
@@ -85,7 +85,7 @@ function BarTooltip({ bin }) {
         </div>
       ) : (
         <p className="mt-2 text-[11px] leading-4 text-text-muted">
-          No samples in this interval.
+          Belum ada sampel pada interval ini.
         </p>
       )}
     </div>
@@ -112,17 +112,17 @@ export default function GasChart({ range = "1h", onRangeChange }) {
     (best, bin) => (bin.peak > best.peak ? bin : best),
     bins[0],
   );
-  const liveLabel = live ? "Live updating" : "Waiting for data";
+  const liveLabel = live ? "Memperbarui langsung" : "Menunggu data";
 
   return (
     <section className="flex h-full flex-col justify-between rounded-[20px] border border-border bg-bg-card p-5 shadow-card sm:p-6">
       <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row">
         <div>
           <h2 className="text-title-md font-bold text-text-primary">
-            Gas level history
+            Riwayat Tingkat Gas
           </h2>
           <p className="text-body-sm text-text-secondary">
-            Peak &amp; average interval metrics with hazard thresholds
+            Nilai puncak dan rata-rata per interval beserta ambang keselamatan
           </p>
         </div>
 
@@ -130,15 +130,15 @@ export default function GasChart({ range = "1h", onRangeChange }) {
           <div className="hidden items-center gap-4 text-body-sm text-text-secondary md:flex">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[3px] bg-[#EDEEF2]" />
-              Peak
+              Puncak
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[3px] bg-[#D0D4DF]" />
-              Average
+              Rata-rata
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[3px] bg-primary" />
-              Current
+              Saat ini
             </span>
           </div>
 
@@ -147,7 +147,7 @@ export default function GasChart({ range = "1h", onRangeChange }) {
               value={range}
               onChange={onRangeChange}
               showIcon={false}
-              ariaLabel="Chart time range"
+              ariaLabel="Rentang waktu grafik"
             />
           )}
         </div>
@@ -158,13 +158,13 @@ export default function GasChart({ range = "1h", onRangeChange }) {
           {formatInterval(active.start, active.end)}
         </span>
         <span className="text-text-secondary">
-          Peak{" "}
+          Puncak{" "}
           <span className="font-semibold text-text-primary">
             {active.samples ? `${active.peak}%` : "—"}
           </span>
         </span>
         <span className="text-text-secondary">
-          Avg{" "}
+          Rata-rata{" "}
           <span className="font-semibold text-text-primary">
             {active.samples ? `${active.average}%` : "—"}
           </span>
@@ -176,16 +176,16 @@ export default function GasChart({ range = "1h", onRangeChange }) {
               : "bg-bg-card text-text-muted"
           }`}
         >
-          {active.status ? STATUS_META[active.status].label : "No data"}
+          {active.status ? STATUS_META[active.status].label : "Belum ada data"}
         </span>
       </div>
 
       <div className="relative h-72 w-full select-none pt-4">
         <p className="sr-only">
-          Gas level history over the {rangeInfo.label.toLowerCase()}.{" "}
+          Riwayat tingkat gas selama {rangeInfo.label.toLowerCase()}.{" "}
           {hasData
-            ? `The highest interval peaked at ${peakBin.peak} percent between ${formatTime(peakBin.start)} and ${formatTime(peakBin.end)}.`
-            : "No telemetry has been received for this range yet."}
+            ? `Nilai puncak tertinggi adalah ${peakBin.peak} persen antara ${formatTime(peakBin.start)} dan ${formatTime(peakBin.end)}.`
+            : "Belum ada telemetri yang diterima untuk rentang waktu ini."}
         </p>
 
         <div
@@ -215,7 +215,7 @@ export default function GasChart({ range = "1h", onRangeChange }) {
                 <span
                   className={`hidden font-mono text-[10px] sm:block ${threshold.text}`}
                 >
-                  Threshold
+                  Ambang
                 </span>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function GasChart({ range = "1h", onRangeChange }) {
                   onFocus={() => setSelected(bin.index)}
                   onClick={() => setSelected(bin.index)}
                   aria-pressed={isSelected}
-                  aria-label={`${formatInterval(bin.start, bin.end)}. ${bin.samples ? `Peak ${bin.peak} percent, average ${bin.average} percent. ${STATUS_META[bin.status].label}.` : "No data."}`}
+                  aria-label={`${formatInterval(bin.start, bin.end)}. ${bin.samples ? `Puncak ${bin.peak} persen, rata-rata ${bin.average} persen. ${STATUS_META[bin.status].label}.` : "Belum ada data."}`}
                   className="group relative flex h-full items-end justify-center rounded-sm"
                 >
                   {isSelected && (
@@ -278,7 +278,7 @@ export default function GasChart({ range = "1h", onRangeChange }) {
           {!hasData && (
             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center pb-16">
               <span className="animate-pulse-soft rounded-full border border-border bg-white/95 px-3 py-1.5 text-body-sm font-medium text-text-muted shadow-sm">
-                Waiting for telemetry…
+                Menunggu telemetri…
               </span>
             </div>
           )}
@@ -302,7 +302,7 @@ export default function GasChart({ range = "1h", onRangeChange }) {
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3 text-body-sm text-text-muted">
-        <span>Resolution: {rangeInfo.binMinutes} min aggregated bins</span>
+        <span>Interval: {rangeInfo.binMinutes} menit</span>
         <span className="flex items-center gap-1 text-text-secondary">
           <Icon
             name={live ? "sync" : "hourglass_top"}

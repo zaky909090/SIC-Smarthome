@@ -10,7 +10,10 @@ import {
   eventDuration,
   formatDateTime,
   formatDuration,
+  getEventDisplay,
   matchesEventFilter,
+  matchesEventSearch,
+  STATE_LABELS,
   thresholdStatus,
 } from "@/utils/iot.js";
 
@@ -39,8 +42,8 @@ const CATEGORY_ICONS = {
 };
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
+  { value: "newest", label: "Terbaru" },
+  { value: "oldest", label: "Terlama" },
 ];
 
 const ACTIVE_STATUSES = {
@@ -61,20 +64,20 @@ const GAS_STYLES = {
 function eventStatus(event) {
   if (event.state === "ACTIVE") {
     return {
-      label: "Active",
+      label: STATE_LABELS.ACTIVE,
       dot: "bg-status-danger animate-pulse",
       text: ACTIVE_STATUSES[event.category] || "text-status-danger-strong",
     };
   }
   if (event.state === "INTERRUPTED") {
     return {
-      label: "Interrupted",
+      label: STATE_LABELS.INTERRUPTED,
       dot: "bg-status-warning",
       text: "text-status-warning-strong",
     };
   }
   return {
-    label: "Resolved",
+    label: STATE_LABELS.RESOLVED,
     dot: "bg-status-normal",
     text: "text-status-normal-strong",
   };
@@ -91,8 +94,8 @@ function pageNumbers(current, total) {
 }
 
 export default function EventsTable({
-  title = "Recent events",
-  subtitle = "Live stream of gas threshold alarms, valve toggles, and hardware fail-safes",
+  title = "Kejadian Terbaru",
+  subtitle = "Pembaruan alarm gas, perubahan katup, dan pengaman perangkat",
   pageSize = 10,
   filter,
   onFilterChange,
@@ -110,25 +113,9 @@ export default function EventsTable({
   const updateFilter = onFilterChange || setInternalFilter;
 
   const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
     return events
       .filter((event) => matchesEventFilter(event, activeFilter))
-      .filter((event) => {
-        if (!query) return true;
-        return [
-          event.id,
-          event.title,
-          event.detail,
-          event.source,
-          event.category,
-          event.type,
-          event.state,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      })
+      .filter((event) => matchesEventSearch(event, search))
       .sort((a, b) =>
         sort === "oldest" ? a.time - b.time : b.time - a.time,
       );
@@ -173,8 +160,8 @@ export default function EventsTable({
   };
 
   const emptyMessage = events.length
-    ? "No events match the current search and filters."
-    : "No events yet. Events will appear here as soon as the device publishes them.";
+    ? "Tidak ada kejadian yang sesuai dengan pencarian dan filter saat ini."
+    : "Belum ada kejadian. Kejadian akan muncul setelah perangkat mengirimkannya.";
 
   return (
     <section className="animate-rise rounded-[20px] border border-border bg-bg-card p-5 shadow-card sm:p-6">
@@ -199,14 +186,14 @@ export default function EventsTable({
                 setSearch(event.target.value);
                 resetPage();
               }}
-              placeholder="Search events…"
-              aria-label="Search events"
+              placeholder="Cari kejadian…"
+              aria-label="Cari kejadian"
               className="w-full rounded-full border border-border bg-bg-subtle py-2 pl-9 pr-4 text-body-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/15 sm:w-60"
             />
           </div>
 
           <div className="flex items-center gap-1.5 rounded-full border border-border bg-bg-subtle px-3 py-2 text-label-md text-text-primary transition-colors hover:border-brand-200">
-            <span className="text-text-secondary">Sort by:</span>
+            <span className="text-text-secondary">Urutkan:</span>
             <CustomSelect
               value={sort}
               onChange={(value) => {
@@ -214,7 +201,7 @@ export default function EventsTable({
                 resetPage();
               }}
               options={SORT_OPTIONS}
-              ariaLabel="Sort events"
+              ariaLabel="Urutkan kejadian"
               variant="bare"
             />
           </div>
@@ -236,169 +223,173 @@ export default function EventsTable({
                 name="download"
                 className="text-[17px] text-text-secondary transition-colors group-hover:text-primary"
               />
-              {selected.size ? `Export ${selected.size}` : "Export"}
+              {selected.size ? `Ekspor ${selected.size}` : "Ekspor"}
             </button>
           )}
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] border-collapse text-left">
-          <caption className="sr-only">
-            {title}. Newest {rows.length} of {filtered.length} filtered events.
-          </caption>
-          <thead>
-            <tr className="border-y border-border bg-bg-subtle text-label-md text-text-secondary">
-              <th className="w-10 px-3 py-3 text-center">
-                <input
-                  type="checkbox"
-                  checked={allPageSelected}
-                  onChange={togglePage}
-                  disabled={rows.length === 0}
-                  aria-label="Select all events on this page"
-                  className="rounded border-border"
-                />
-              </th>
-              <th className="px-3 py-3 font-medium">Event info</th>
-              <th className="px-3 py-3 font-medium">Event ID</th>
-              <th className="px-3 py-3 font-medium">Date &amp; time</th>
-              <th className="px-3 py-3 font-medium">Source</th>
-              <th className="px-3 py-3 font-medium">Category</th>
-              <th className="px-3 py-3 font-medium">Status</th>
-              <th className="px-3 py-3 font-medium">Gas level</th>
-              <th className="px-3 py-3 font-medium">Duration</th>
-            </tr>
-          </thead>
+      <div className="overflow-hidden rounded-2xl border border-border bg-bg-card">
+        <div data-lenis-prevent className="overflow-x-auto">
+          <table className="w-full min-w-[1000px] border-collapse text-left">
+            <caption className="sr-only">
+              {title}. Menampilkan {rows.length} dari {filtered.length} kejadian
+              sesuai pencarian dan filter.
+            </caption>
+            <thead>
+              <tr className="border-b border-border bg-bg-subtle text-label-md text-text-secondary">
+                <th className="w-10 px-3 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    onChange={togglePage}
+                    disabled={rows.length === 0}
+                    aria-label="Pilih semua kejadian di halaman ini"
+                    className="rounded border-border"
+                  />
+                </th>
+                <th className="px-3 py-3 font-medium">Info kejadian</th>
+                <th className="px-3 py-3 font-medium">ID kejadian</th>
+                <th className="px-3 py-3 font-medium">Tanggal &amp; waktu</th>
+                <th className="px-3 py-3 font-medium">Sumber</th>
+                <th className="px-3 py-3 font-medium">Kategori</th>
+                <th className="px-3 py-3 font-medium">Status</th>
+                <th className="px-3 py-3 font-medium">Tingkat gas</th>
+                <th className="px-3 py-3 font-medium">Durasi</th>
+              </tr>
+            </thead>
 
-          <tbody className="divide-y divide-border text-body-md">
-            {rows.map((event) => {
-              const icon = CATEGORY_ICONS[event.category] || CATEGORY_ICONS.Info;
-              const state = eventStatus(event);
-              const level = thresholdStatus(event.gas);
-              const duration = eventDuration(event, now);
+            <tbody className="divide-y divide-border text-body-md">
+              {rows.map((event) => {
+                const icon = CATEGORY_ICONS[event.category] || CATEGORY_ICONS.Info;
+                const state = eventStatus(event);
+                const level = thresholdStatus(event.gas);
+                const duration = eventDuration(event, now);
+                const display = getEventDisplay(event);
 
-              return (
-                <tr
-                  key={event.key}
-                  className="group animate-event-in transition-colors hover:bg-brand-50/40"
-                >
-                  <td className="px-3 py-3.5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(event.key)}
-                      onChange={() => toggleRow(event.key)}
-                      aria-label={`Select ${event.id}`}
-                      className="rounded border-border"
-                    />
-                  </td>
+                return (
+                  <tr
+                    key={event.key}
+                    className="group animate-event-in transition-colors hover:bg-brand-50/40"
+                  >
+                    <td className="px-3 py-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(event.key)}
+                        onChange={() => toggleRow(event.key)}
+                        aria-label={`Pilih kejadian ${event.id}`}
+                        className="rounded border-border"
+                      />
+                    </td>
 
-                  <td className="px-3 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110 ${icon.className}`}
-                      >
-                        <Icon
-                          name={icon.name}
-                          className="text-[18px]"
-                          filled={icon.filled}
-                        />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-text-primary">
-                          {event.title}
-                        </p>
-                        <p className="max-w-[340px] truncate text-body-sm text-text-muted">
-                          {event.detail || event.type}
-                        </p>
+                    <td className="px-3 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110 ${icon.className}`}
+                        >
+                          <Icon
+                            name={icon.name}
+                            className="text-[18px]"
+                            filled={icon.filled}
+                          />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-text-primary">
+                            {display.title}
+                          </p>
+                          <p className="max-w-[340px] truncate text-body-sm text-text-muted">
+                            {display.detail}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
-                    {event.id}
-                  </td>
+                    <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
+                      {event.id}
+                    </td>
 
-                  <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
-                    {formatDateTime(event.time)}
-                  </td>
+                    <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
+                      {formatDateTime(event.time)}
+                    </td>
 
-                  <td className="whitespace-nowrap px-3 py-3.5 text-text-primary">
-                    {event.source}
-                  </td>
+                    <td className="whitespace-nowrap px-3 py-3.5 text-text-primary">
+                      {display.source}
+                    </td>
 
-                  <td className="px-3 py-3.5">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-label-sm font-semibold ${
-                        CATEGORY_STYLES[event.category] ||
-                        CATEGORY_STYLES.Info
+                    <td className="px-3 py-3.5">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-label-sm font-semibold ${
+                          CATEGORY_STYLES[event.category] ||
+                          CATEGORY_STYLES.Info
+                        }`}
+                      >
+                        {display.category}
+                      </span>
+                    </td>
+
+                    <td className="whitespace-nowrap px-3 py-3.5">
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-label-sm font-medium ${state.text}`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${state.dot}`} />
+                        {state.label}
+                      </span>
+                    </td>
+
+                    <td
+                      className={`whitespace-nowrap px-3 py-3.5 font-mono font-bold tabular ${
+                        GAS_STYLES[level] || "text-text-primary"
                       }`}
                     >
-                      {event.category}
-                    </span>
-                  </td>
+                      {event.gas == null ? "—" : `${event.gas}%`}
+                    </td>
 
-                  <td className="whitespace-nowrap px-3 py-3.5">
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-label-sm font-medium ${state.text}`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${state.dot}`} />
-                      {state.label}
-                    </span>
-                  </td>
-
-                  <td
-                    className={`whitespace-nowrap px-3 py-3.5 font-mono font-bold tabular ${
-                      GAS_STYLES[level] || "text-text-primary"
-                    }`}
-                  >
-                    {event.gas == null ? "—" : `${event.gas}%`}
-                  </td>
-
-                  <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
-                    {event.state === "ACTIVE" ? (
-                      <span className={state.text}>Ongoing</span>
-                    ) : (
-                      formatDuration(duration)
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {rows.length === 0 && (
-        <div className="border-b border-border px-4 py-12 text-center">
-          <span className="mx-auto mb-3 flex h-11 w-11 animate-float items-center justify-center rounded-full bg-bg-subtle text-text-muted">
-            <Icon name="event_note" className="text-[22px]" />
-          </span>
-          <p className="font-semibold text-text-primary">
-            {events.length ? "No matching events" : "No events yet"}
-          </p>
-          <p className="mt-1 text-body-sm text-text-muted">{emptyMessage}</p>
+                    <td className="whitespace-nowrap px-3 py-3.5 font-mono text-body-sm text-text-secondary">
+                      {event.state === "ACTIVE" ? (
+                        <span className={state.text}>Berlangsung</span>
+                      ) : (
+                        formatDuration(duration)
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {rows.length === 0 && (
+          <div className="px-4 py-12 text-center">
+            <span className="mx-auto mb-3 flex h-11 w-11 animate-float items-center justify-center rounded-full bg-bg-subtle text-text-muted">
+              <Icon name="event_note" className="text-[22px]" />
+            </span>
+            <p className="font-semibold text-text-primary">
+              {events.length ? "Tidak ada kejadian yang sesuai" : "Belum ada kejadian"}
+            </p>
+            <p className="mt-1 text-body-sm text-text-muted">{emptyMessage}</p>
+          </div>
+        )}
+      </div>
 
       <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
         <span className="text-body-sm text-text-secondary">
           {filtered.length === 0 ? (
-            "No events"
+            "Belum ada kejadian"
           ) : (
             <>
-              Showing{" "}
+              Menampilkan{" "}
               <span className="font-semibold text-text-primary">
                 {start + 1}
               </span>{" "}
-              to{" "}
+              hingga{" "}
               <span className="font-semibold text-text-primary">
                 {Math.min(start + pageSize, filtered.length)}
               </span>{" "}
-              of{" "}
+              dari{" "}
               <span className="font-semibold text-text-primary">
                 {filtered.length}
               </span>{" "}
-              events
+              kejadian
             </>
           )}
         </span>
@@ -410,7 +401,7 @@ export default function EventsTable({
             disabled={safePage === 1}
             className="rounded-full border border-border bg-bg-card px-3.5 py-1.5 text-label-md text-text-primary transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 disabled:cursor-not-allowed disabled:text-text-muted disabled:hover:translate-y-0 disabled:hover:border-border disabled:hover:bg-bg-card"
           >
-            Previous
+            Sebelumnya
           </button>
 
           <div className="flex items-center gap-1">
@@ -443,7 +434,7 @@ export default function EventsTable({
             disabled={safePage === totalPages}
             className="rounded-full border border-border bg-bg-card px-3.5 py-1.5 text-label-md text-text-primary transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 disabled:cursor-not-allowed disabled:text-text-muted disabled:hover:translate-y-0 disabled:hover:border-border disabled:hover:bg-bg-card"
           >
-            Next
+            Berikutnya
           </button>
         </div>
       </div>

@@ -25,8 +25,8 @@ export default function CustomSelect({
   value,
   onChange,
   options = [],
-  ariaLabel = "Select option",
-  placeholder = "Select",
+  ariaLabel = "Pilih opsi",
+  placeholder = "Pilih",
   variant = "pill",
   icon,
   className = "",
@@ -226,12 +226,13 @@ export default function CustomSelect({
             }}
           >
             <div
+              data-lenis-prevent
               className="overflow-y-auto"
               style={{ maxHeight: menuPos.maxHeight }}
             >
               {normalized.length === 0 ? (
                 <div className="px-3.5 py-3 text-center text-body-sm text-text-muted">
-                  No options
+                  Tidak ada pilihan
                 </div>
               ) : (
                 normalized.map((option, index) => {

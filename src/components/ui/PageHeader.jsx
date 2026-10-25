@@ -39,7 +39,7 @@ export default function PageHeader({
               name="download"
               className="text-[18px] text-text-secondary transition-colors group-hover:text-primary"
             />
-            Export CSV
+            Ekspor CSV
           </button>
         )}
       </div>

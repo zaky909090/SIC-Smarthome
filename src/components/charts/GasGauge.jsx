@@ -45,17 +45,17 @@ const LEVEL_BADGES = {
 };
 
 const LEVEL_LABELS = {
-  NORMAL: "Safe range",
-  ELEVATED: "Elevated",
-  WARNING: "Warning level reached",
-  DANGER: "Danger level reached",
+  NORMAL: "Rentang aman",
+  ELEVATED: "Meningkat",
+  WARNING: "Ambang peringatan",
+  DANGER: "Ambang bahaya",
 };
 
 function LevelBadge({ level }) {
   if (!level) {
     return (
       <span className="mt-1 inline-block rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-semibold text-text-muted">
-        No data
+        Belum ada data
       </span>
     );
   }
@@ -84,40 +84,40 @@ export default function GasGauge() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-title-md font-bold text-text-primary">
-            Live gas level
+            Tingkat Gas Saat Ini
           </h2>
           <p className="text-body-sm text-text-secondary">
-            Current detector concentration
+            Indeks pembacaan detektor saat ini
           </p>
         </div>
 
         <details className="relative">
           <summary
-            aria-label="Gauge thresholds"
+            aria-label="Ambang indikator gas"
             className="flex h-8 w-8 list-none items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-bg-subtle [&::-webkit-details-marker]:hidden"
           >
             <Icon name="more_horiz" className="text-[20px]" />
           </summary>
           <div className="animate-tooltip-in absolute right-0 z-30 mt-2 w-56 rounded-2xl border border-border bg-bg-card p-4 text-body-sm shadow-tooltip">
             <p className="mb-2 font-semibold text-text-primary">
-              MQ-2 index thresholds
+              Ambang indeks MQ-2
             </p>
             <dl className="space-y-1.5 text-text-secondary">
               <div className="flex justify-between gap-3">
-                <dt>Safe</dt>
+                <dt>Aman</dt>
                 <dd className="font-semibold text-status-normal-strong">0–20%</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt>Warning</dt>
+                <dt>Peringatan</dt>
                 <dd className="font-semibold text-status-warning-strong">50–59%</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt>Danger</dt>
+                <dt>Bahaya</dt>
                 <dd className="font-semibold text-status-danger-strong">60–100%</dd>
               </div>
             </dl>
             <p className="mt-2 border-t border-border pt-2 text-[11px] leading-4 text-text-muted">
-              Gas is an index from the analog MQ-2 reading, not ppm.
+              Nilai gas adalah indeks pembacaan analog MQ-2, bukan ppm.
             </p>
           </div>
         </details>
@@ -128,11 +128,11 @@ export default function GasGauge() {
           role="img"
           aria-label={
             gas == null
-              ? "Live gas level unavailable. No telemetry received yet."
-              : `Live gas level ${gas} percent. Peak today ${
-                  summary.peakToday == null ? "unavailable" : `${summary.peakToday} percent`
-                }, average last hour ${
-                  summary.average1h == null ? "unavailable" : `${summary.average1h} percent`
+              ? "Tingkat gas tidak tersedia. Belum ada telemetri yang diterima."
+              : `Tingkat gas saat ini ${gas} persen. Puncak hari ini ${
+                  summary.peakToday == null ? "tidak tersedia" : `${summary.peakToday} persen`
+                }, rata-rata satu jam terakhir ${
+                  summary.average1h == null ? "tidak tersedia" : `${summary.average1h} persen`
                 }.`
           }
           className="relative flex h-36 w-64 items-center justify-center overflow-hidden"
@@ -169,7 +169,7 @@ export default function GasGauge() {
               {gas == null ? "—" : `${gas}%`}
             </span>
             <span className="mt-1 text-title-md font-medium text-text-secondary">
-              Gas level
+              Tingkat gas
             </span>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function GasGauge() {
       <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
         <div className="rounded-xl border border-border bg-bg-subtle p-3 transition-colors hover:border-brand-200 hover:bg-brand-50">
           <span className="block text-body-sm text-text-secondary">
-            Peak today
+            Puncak hari ini
           </span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-title-md font-bold tabular text-text-primary">
@@ -191,7 +191,7 @@ export default function GasGauge() {
 
         <div className="rounded-xl border border-border bg-bg-subtle p-3 transition-colors hover:border-brand-200 hover:bg-brand-50">
           <span className="block text-body-sm text-text-secondary">
-            Average 1 h
+            Rata-rata 1 jam
           </span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-title-md font-bold tabular text-text-primary">

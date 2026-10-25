@@ -17,10 +17,10 @@ There is no typecheck, CI, or pre-commit hook. Verify changes with `npm test`, `
 
 - `src/main.jsx` mounts `App` inside `IotProvider` and `BrowserRouter`.
 - `src/App.jsx` owns the route table: `/`, `/analytics`, `/event-log`, all nested under `DashboardLayout`; unknown paths redirect to `/`.
-- `src/layouts/DashboardLayout.jsx` renders the shell, brand, nav, connection pill, and `<Outlet />`.
+- `src/layouts/DashboardLayout.jsx` renders the shell, brand, nav, connection pill, and `<Outlet />`, and owns the single Locomotive Scroll v5 lifecycle.
 - `src/pages/{dashboard,analytics,event-log}/index.jsx` contains the route pages. Dashboard-only KPIs and banners live in `src/pages/dashboard/components/`; shared components are grouped under `src/components/{charts,events,ui}/`.
 - `src/services/mqtt.js` owns the MQTT transport and cleanup, including the 200 ms StrictMode delay. `src/context/IotProvider.jsx` owns the reducer, session state, normalization, stale/offline detection, and derived connection/summary. `src/hooks/useIot.js` is the context hook.
-- `src/utils/iot.js` holds pure status/threshold, event upsert, minute-bucket/history, summary, filter, and formatting helpers. `src/utils/csv.js` handles event/history CSV downloads.
+- `src/utils/iot.js` holds pure status/threshold, event upsert, minute-bucket/history, summary, filter/search, Indonesian display labels, and formatting helpers. `src/utils/csv.js` handles event/history CSV downloads.
 - `@/` aliases `src/` in Vite and `jsconfig.json`. Utilities imported by Node tests or the simulator must keep Node-compatible relative imports.
 - `src/config.js` is the single source for the MQTT URL, topic prefix/topics, thresholds, and limits. Override with `VITE_MQTT_URL` / `VITE_MQTT_TOPIC_PREFIX`.
 - `scripts/simulate.mjs` publishes telemetry, events, and retained availability to the same topics as the firmware. `tests/iot.test.js` covers the pure logic.
@@ -33,16 +33,18 @@ There is no typecheck, CI, or pre-commit hook. Verify changes with `npm test`, `
 - Connection health: telemetry newer than 3 s is live, 3–10 s waiting, >10 s (or retained `offline` with no fresh telemetry) offline.
 - Event key is `device|boot|id`; an `ACTIVE` event is updated by its `RESOLVED` message. Active events from an old boot become `Interrupted`.
 - If firmware `ts` is `0`/missing, use the browser receive time.
+- UI, accessibility labels, date formatting, and CSV headings use Indonesian. Keep MQTT identifiers unchanged; `getEventDisplay` translates known messages without mutating payloads, and preserves unknown/custom text. Search includes both displayed labels and raw identifiers.
 - The MQTT connection is delayed 200 ms inside the effect so React StrictMode's first setup/cleanup pair does not open and abandon a WebSocket.
 
 ## Styling
 
 - Tailwind v4 via `@tailwindcss/vite`, CSS-first theme tokens in `src/styles/index.css`; there is no `tailwind.config.js` and no CDN.
-- Plus Jakarta Sans everywhere; Material Symbols via the `Icon` component. Primary navy is `#1E6593`, with the blue scale in the theme.
+- Plus Jakarta Sans everywhere; local Phosphor SVGs from `react-icons/pi` via the `Icon` component, with no icon CDN. Primary navy is `#1E6593`, with the blue scale in the theme.
 - Charts are CSS bars and a hand-built 16-segment SVG gauge; no chart library.
 - Plain utility classes; `clsx` is available but not required.
 - `CustomSelect` uses React portals for range, sort, and filter menus; preserve keyboard navigation and visible focus styling.
-- Motion is CSS-only with a `prefers-reduced-motion` override. Do not animate numeric telemetry counters.
+- Visual motion is CSS-only; Locomotive Scroll v5 smooths wheel scrolling, while touch scrolling stays native. Reduced motion disables both CSS motion and the scroll instance. Table/dropdown scrolling uses `data-lenis-prevent`. Do not animate numeric telemetry counters.
+- Locomotive v5 schedules its initialization in a frame: defer/cancel creation for StrictMode, and defer destruction until that setup finishes. Do not create extra instances or Lenis RAF loops on route or telemetry updates.
 - `src/assets/logo_brand.png` is the unchanged supplied asset; branding uses its cropped `logo-mark.png`. Public icons are `favicon.png` and `apple-touch-icon.png`.
 
 ## Gotchas

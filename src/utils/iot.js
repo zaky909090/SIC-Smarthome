@@ -2,20 +2,20 @@ import { MAX_MINUTES, THRESHOLDS } from "../config.js";
 
 export const RANGES = {
   "1h": {
-    label: "Last 1 hour",
-    short: "1 h",
+    label: "1 jam terakhir",
+    short: "1 jam",
     spanMinutes: 60,
     binMinutes: 5,
   },
   "6h": {
-    label: "Last 6 hours",
-    short: "6 h",
+    label: "6 jam terakhir",
+    short: "6 jam",
     spanMinutes: 360,
     binMinutes: 30,
   },
   "24h": {
-    label: "Last 24 hours",
-    short: "24 h",
+    label: "24 jam terakhir",
+    short: "24 jam",
     spanMinutes: 1440,
     binMinutes: 120,
   },
@@ -31,7 +31,7 @@ export const STATUS_META = {
     softClass: "bg-brand-50 text-primary",
   },
   WARNING: {
-    label: "Warning",
+    label: "Peringatan",
     rank: 1,
     gradient: "linear-gradient(160deg, #FDB022 0%, #F79009 100%)",
     darkText: true,
@@ -39,7 +39,7 @@ export const STATUS_META = {
     softClass: "bg-status-warning/15 text-status-warning-strong",
   },
   PURGE: {
-    label: "Purge",
+    label: "Pembuangan",
     rank: 2,
     gradient: "linear-gradient(160deg, #9B8AFB 0%, #6938EF 100%)",
     darkText: false,
@@ -47,7 +47,7 @@ export const STATUS_META = {
     softClass: "bg-status-purge/10 text-status-purge-strong",
   },
   DANGER: {
-    label: "Danger",
+    label: "Bahaya",
     rank: 3,
     gradient: "linear-gradient(160deg, #F97066 0%, #D92D20 100%)",
     darkText: false,
@@ -55,7 +55,7 @@ export const STATUS_META = {
     softClass: "bg-status-danger/10 text-status-danger-strong",
   },
   LOCKOUT: {
-    label: "Lockout",
+    label: "Terkunci",
     rank: 4,
     gradient: "linear-gradient(160deg, #475467 0%, #1D2939 100%)",
     darkText: false,
@@ -66,13 +66,66 @@ export const STATUS_META = {
 
 export const STATUS_BANNER = {
   WARNING:
-    "Gas is above 50%. Keep ignition sources away and ventilate the area.",
+    "Indeks gas di atas 50%. Jauhkan sumber api dan buka ventilasi ruangan.",
   DANGER:
-    "Gas is above 60%. Move away from the source and keep ignition off.",
+    "Indeks gas di atas 60%. Menjauh dari sumber kebocoran dan jangan menyalakan api.",
   PURGE:
-    "Interlock active. The valve is closed while purge and blower are running.",
+    "Pengaman aktif. Katup tertutup saat pembuangan gas dan kipas bekerja.",
   LOCKOUT:
-    "Gas is back below 20%. Press the physical button to reset the system.",
+    "Indeks gas kembali ke rentang aman (≤20%). Tekan tombol fisik untuk mengatur ulang sistem.",
+};
+
+export const CATEGORY_LABELS = {
+  __proto__: null,
+  Warning: "Peringatan",
+  Danger: "Bahaya",
+  Interlock: "Pengaman",
+  Reset: "Atur Ulang",
+  Info: "Informasi",
+};
+
+export const STATE_LABELS = {
+  __proto__: null,
+  ACTIVE: "Aktif",
+  RESOLVED: "Selesai",
+  INTERRUPTED: "Terhenti",
+};
+
+export const SOURCE_LABELS = {
+  __proto__: null,
+  "MQ-2 sensor": "Sensor MQ-2",
+  System: "Sistem",
+  Button: "Tombol",
+};
+
+const EVENT_TEXT = {
+  __proto__: null,
+  GAS_ABOVE_50: "Gas di atas 50%",
+  GAS_ABOVE_60: "Gas di atas 60%",
+  AUTO_INTERLOCK: "Pengaman aktif, katup ditutup",
+  LOCKOUT: "Sistem terkunci",
+  RESET_ACCEPTED: "Pengaturan ulang diterima",
+  VALVE_ON: "Katup dibuka",
+  VALVE_OFF: "Katup ditutup",
+  SYSTEM_START: "Sistem dimulai",
+  "Gas above 50%": "Gas di atas 50%",
+  "Gas above 60%": "Gas di atas 60%",
+  "Interlock on, valve closed": "Pengaman aktif, katup ditutup",
+  Lockout: "Sistem terkunci",
+  "Reset accepted": "Pengaturan ulang diterima",
+  "Valve on": "Katup dibuka",
+  "Valve off": "Katup ditutup",
+  "System started": "Sistem dimulai",
+  "Warning threshold reached": "Ambang peringatan tercapai",
+  "Danger threshold reached": "Ambang bahaya tercapai",
+  "Gas above 50% with valve on. Purge and blower started":
+    "Gas di atas 50% saat katup terbuka. Pembuangan gas dan kipas mulai bekerja",
+  "Gas back below 20%. Press the button to reset":
+    "Gas kembali ke rentang aman. Tekan tombol fisik untuk mengatur ulang",
+  "Gas back below 20%. Valve stays off":
+    "Gas kembali ke rentang aman. Katup tetap tertutup",
+  "Servo opened": "Servo membuka katup",
+  "Servo closed": "Servo menutup katup",
 };
 
 export const CATEGORY_STYLES = {
@@ -89,20 +142,20 @@ export const EMPTY_FILTER = {
   source: "All",
 };
 
-const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+const timeFormatter = new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
 });
 
-const clockFormatter = new Intl.DateTimeFormat("en-GB", {
+const clockFormatter = new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit",
   hourCycle: "h23",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
   year: "numeric",
@@ -426,6 +479,43 @@ export function matchesEventFilter(event, filter = EMPTY_FILTER) {
   );
 }
 
+export function getEventDisplay(event) {
+  const type = EVENT_TEXT[event.type] || event.type;
+  const detail =
+    event.type === "SYSTEM_START" &&
+    event.detail === `Device ${event.device} is online`
+      ? `Perangkat ${event.device} terhubung`
+      : EVENT_TEXT[event.detail] || event.detail;
+
+  return {
+    title: EVENT_TEXT[event.title] || event.title || type,
+    detail: detail || type,
+    type,
+    category: CATEGORY_LABELS[event.category] || event.category,
+    state: STATE_LABELS[event.state] || event.state,
+    source: SOURCE_LABELS[event.source] || event.source,
+  };
+}
+
+export function matchesEventSearch(event, search) {
+  const query = search.trim().toLowerCase();
+  if (!query) return true;
+
+  return [
+    event.id,
+    event.title,
+    event.detail,
+    event.source,
+    event.category,
+    event.type,
+    event.state,
+    ...Object.values(getEventDisplay(event)),
+  ]
+    .join(" ")
+    .toLowerCase()
+    .includes(query);
+}
+
 export function formatTime(value) {
   if (!value) return "—";
   return timeFormatter.format(value);
@@ -448,13 +538,13 @@ export function formatInterval(start, end) {
 export function formatAgo(value, now) {
   if (!value || !now) return "—";
   const seconds = Math.max(0, Math.round((now - value) / 1000));
-  if (seconds < 5) return "just now";
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 5) return "baru saja";
+  if (seconds < 60) return `${seconds} detik lalu`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60) return `${minutes} menit lalu`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hr ago`;
-  return `${Math.floor(hours / 24)} d ago`;
+  if (hours < 24) return `${hours} jam lalu`;
+  return `${Math.floor(hours / 24)} hari lalu`;
 }
 
 export function formatDuration(ms) {

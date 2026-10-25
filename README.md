@@ -1,46 +1,46 @@
-# SmartHome — Gas Safety Dashboard
+# SmartHome — Dasbor Keamanan Gas
 
-React 19 + Vite 8 single-page dashboard for the `ESP32-GAS-01` gas-safety device. It subscribes to live MQTT telemetry and events from the Wokwi firmware and renders system status, valve/purge state, gas history, a live gauge, and a searchable event log.
+Dasbor satu halaman berbasis React 19 + Vite 8 untuk perangkat keamanan gas `ESP32-GAS-01`. Aplikasi menerima telemetri dan kejadian MQTT dari firmware Wokwi, lalu menampilkan status sistem, katup, pembuangan gas, grafik riwayat, indikator gas, dan riwayat kejadian.
 
-The dashboard is **read-only**. The firmware exposes no command topic, so the UI never opens the valve, resets the interlock, or changes thresholds.
+Dasbor **hanya untuk pemantauan**. Firmware tidak menyediakan topik perintah, sehingga aplikasi tidak membuka katup, mengatur ulang pengaman, atau mengubah ambang. Kartu Katup menampilkan telemetri tanpa toggle kontrol maupun indikator radio.
 
-## Quick start
+## Memulai
 
-Requires Node `^20.19.0 || >=22.12.0`.
+Memerlukan Node `^20.19.0 || >=22.12.0`.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the printed URL (default `http://localhost:5173`). Without a publisher the UI shows **Waiting for data** / **Device offline** states with `—` values; it never seeds fake readings.
+Buka URL yang tercetak di terminal (bawaan `http://localhost:5173`). Tanpa pengirim data, aplikasi menampilkan **Menunggu data** / **Perangkat terputus** dan nilai `—`; tidak ada pembacaan contoh yang dibuat otomatis.
 
 ## MQTT
 
-Defaults are set in `src/config.js`:
+Pengaturan bawaan berada di `src/config.js`:
 
-| Setting | Default |
+| Pengaturan | Nilai bawaan |
 | --- | --- |
-| Browser URL | `wss://broker.hivemq.com:8884/mqtt` |
-| Topic prefix | `sic8/smarthome88` |
-| Device | `ESP32-GAS-01` |
+| URL peramban | `wss://broker.hivemq.com:8884/mqtt` |
+| Awalan topik | `sic8/smarthome88` |
+| Perangkat | `ESP32-GAS-01` |
 
-Override with `.env` variables:
+Untuk menggantinya, gunakan variabel `.env`:
 
 ```bash
-VITE_MQTT_URL=wss://your-broker:8884/mqtt
-VITE_MQTT_TOPIC_PREFIX=your/prefix
+VITE_MQTT_URL=wss://broker-anda:8884/mqtt
+VITE_MQTT_TOPIC_PREFIX=awalan/anda
 ```
 
-Topics:
+Topik yang digunakan:
 
-- `<prefix>/telemetry` — retained? no, published about once per second.
-- `<prefix>/event` — `ACTIVE` / `RESOLVED` event pairs with a stable `id` per boot.
-- `<prefix>/availability` — retained `online` / `offline` last-will message.
+- `<prefix>/telemetry` — tidak disimpan oleh broker, dikirim sekitar sekali per detik.
+- `<prefix>/event` — pasangan kejadian `ACTIVE` / `RESOLVED` dengan `id` yang tetap selama satu sesi perangkat.
+- `<prefix>/availability` — pesan ketersediaan `online` / `offline` yang disimpan broker, termasuk pesan saat perangkat terputus.
 
-The browser client subscribes to all three with QoS 1. The firmware publishes over plain TCP `1883`; browsers must use the broker's secure WebSocket endpoint (HiveMQ public broker: `8884/mqtt`).
+Peramban berlangganan ketiga topik dengan QoS 1. Firmware mengirim melalui TCP `1883`; peramban harus memakai WebSocket aman milik broker (HiveMQ publik: `8884/mqtt`).
 
-### Telemetry payload
+### Payload telemetri
 
 ```json
 {
@@ -60,9 +60,9 @@ The browser client subscribes to all three with QoS 1. The firmware publishes ov
 }
 ```
 
-`gas` is an index from the analog MQ-2 reading (0–100), not ppm. If `ts` is `0` or missing, the dashboard uses the browser receive time.
+`gas` merupakan indeks pembacaan analog MQ-2 (0–100), bukan ppm. Jika `ts` bernilai `0` atau tidak tersedia, dasbor menggunakan waktu penerimaan pesan di peramban.
 
-### Event payload
+### Payload kejadian
 
 ```json
 {
@@ -80,87 +80,103 @@ The browser client subscribes to all three with QoS 1. The firmware publishes ov
 }
 ```
 
-The event key is `device|boot|id`. An `ACTIVE` event is updated in place when its `RESOLVED` message arrives. If a new boot publishes while an event from the previous boot is still `ACTIVE`, the old event is marked `Interrupted`.
+Kunci kejadian adalah `device|boot|id`. Pesan `RESOLVED` memperbarui kejadian `ACTIVE` yang sama, bukan menambahkan baris baru. Jika perangkat memulai sesi baru saat kejadian sesi sebelumnya masih aktif, kejadian lama ditandai **Terhenti** (`INTERRUPTED`).
 
-## Status and thresholds
+## Status dan ambang
 
-- `0–20%` — Safe / Normal
-- `50–59%` — Warning
-- `60–100%` — Danger
-- `21–49%` — Elevated (used by the gauge mini cards)
+- `0–20%` — Aman / Normal
+- `50–59%` — Peringatan
+- `60–100%` — Bahaya
+- `21–49%` — Meningkat (digunakan pada kartu ringkasan indikator gas)
 
-The hero status also follows the interlock:
+Status sistem juga mengikuti pengaman:
 
-- Interlock on and gas above `20%` → **Purge**
-- Interlock on and gas at or below `20%` → **Lockout**
-- Otherwise gas thresholds win.
+- Pengaman aktif dan gas di atas `20%` → **Pembuangan** (`PURGE`)
+- Pengaman aktif dan gas `20%` atau lebih rendah → **Terkunci** (`LOCKOUT`)
+- Selain itu, ambang gas menentukan status.
 
-MQTT connection health is separate from device health: telemetry newer than 3 s is live, 3–10 s is waiting, and more than 10 s (or a retained `offline` availability with no fresh telemetry) is offline.
+Kesehatan koneksi MQTT terpisah dari status perangkat: telemetri berusia hingga 3 detik dianggap langsung, 3–10 detik berarti menunggu, dan lebih dari 10 detik berarti terputus. Pesan ketersediaan `offline` juga menandai perangkat terputus bila tidak ada telemetri baru.
 
-## Pages
+## Halaman dan tampilan
 
-- `/` — Dashboard: status hero, four KPI cards, gas history chart, live gauge, five recent events.
-- `/analytics` — Gas history chart, live gauge, and session peak/average mini cards.
-- `/event-log` — Full session event table with search, category/state/source filters, sort, pagination (10 rows), row selection, and CSV export.
+- `/` — Dasbor: status sistem, empat kartu ringkasan, grafik riwayat gas, indikator saat ini, dan lima kejadian terbaru.
+- `/analytics` — Analisis gas: grafik riwayat, indikator saat ini, serta ringkasan puncak dan rata-rata sesi.
+- `/event-log` — Riwayat kejadian sesi dengan pencarian, filter kategori/status/sumber, pengurutan, pagination (10 baris), pemilihan baris, dan ekspor CSV.
 
-Charts use 12 CSS bar bins and a hand-built 16-segment SVG gauge; there is no chart library. Range, sort, and filter controls use a shared portal-based dropdown with arrow-key, Home/End, Enter/Space, and Escape support.
+Tabel memakai bingkai luar membulat dengan border pada keempat sisi, pemisah antarbaris, dan gulir horizontal pada layar kecil. Pesan kosong tetap berada di dalam bingkai tabel. Ekspor tabel mengutamakan baris yang dipilih; tanpa pilihan, hasil mengikuti pencarian dan filter.
 
-Motion is CSS-only: restrained page/card entrances, hover feedback, chart/gauge transitions, and live-status accents. `prefers-reduced-motion` disables animations and transitions. Live readings update directly without animated numeric counters.
+Grafik terdiri dari 12 kelompok batang CSS dan indikator SVG buatan sendiri dengan 16 segmen; tidak ada library grafik. Menu rentang waktu, pengurutan, dan filter memakai komponen bersama berbasis portal React dengan dukungan tombol panah, Home/End, Enter/Space, dan Escape.
+
+Ikon berupa SVG lokal dari `react-icons/pi` (Phosphor), bukan font ikon dari CDN. Plus Jakarta Sans tetap dimuat melalui Google Fonts. Logo dan kedua ikon aplikasi berasal dari aset logo yang diberikan; aset asli tidak diubah.
+
+### Bahasa
+
+Tampilan, label aksesibilitas, tooltip, format tanggal, nama unduhan, dan judul kolom CSV menggunakan bahasa Indonesia. Zona waktu mengikuti perangkat pengguna, bukan dipaksa menjadi WIB.
+
+Kunci dan nilai protokol MQTT tetap asli agar kompatibel dengan firmware. `getEventDisplay` di `src/utils/iot.js` menerjemahkan label dan teks kejadian yang dikenali tanpa mengubah payload. Pesan khusus atau belum dikenali dipertahankan apa adanya agar informasi perangkat tidak hilang. Pencarian menerima teks Indonesia maupun identitas MQTT asli. CSV memakai label Indonesia, tetapi ID dan kode jenis kejadian tetap asli.
+
+### Animasi dan gulir
+
+Animasi visual menggunakan CSS: kemunculan halaman/kartu yang halus, respons saat kursor diarahkan, transisi grafik/indikator, dan penanda data langsung. Angka telemetri diperbarui langsung tanpa animasi penghitung.
+
+Satu instance Locomotive Scroll **v5** di `src/layouts/DashboardLayout.jsx` menghaluskan gulir roda tetikus. Gulir sentuh tetap alami, dan area gulir tabel/dropdown dikecualikan melalui `data-lenis-prevent`. Pergantian rute kembali ke bagian atas tanpa membuat instance baru; perubahan ukuran konten ditangani otomatis.
+
+`prefers-reduced-motion` menonaktifkan animasi/transisi CSS serta instance gulir halus. Inisialisasi dan cleanup mempertimbangkan React StrictMode serta penundaan internal Locomotive v5 agar tidak menggandakan proses animasi.
 
 ## Simulator
 
-`scripts/simulate.mjs` publishes the firmware-compatible state cycle so you can exercise every UI state without Wokwi:
+`scripts/simulate.mjs` mengirim siklus data yang kompatibel dengan firmware agar semua status dapat diuji tanpa Wokwi:
 
 ```bash
 npm run simulate
 ```
 
-It publishes to the same prefix/device over TCP `1883` (`MQTT_URL` env var overrides the broker) and cycles Normal → Warning → Danger → Purge → Lockout → Reset. It also publishes the matching `ACTIVE`/`RESOLVED` events and retained availability. The dashboard does not consume the simulator directly; it only sees MQTT messages.
+Simulator menggunakan awalan topik/perangkat yang sama melalui TCP `1883` (variabel `MQTT_URL` mengganti broker), lalu bergantian antara Normal → Peringatan → Bahaya → Pembuangan → Terkunci → Atur Ulang. Kejadian `ACTIVE`/`RESOLVED` dan ketersediaan perangkat ikut dikirim. Dasbor hanya menerima pesan MQTT, bukan membaca simulator secara langsung.
 
-Stop Wokwi before running the simulator so two publishers do not share the same device/topics.
+Hentikan Wokwi sebelum menjalankan simulator agar dua pengirim tidak memakai perangkat/topik yang sama.
 
-## Tests and verification
+## Pengujian dan verifikasi
 
 ```bash
-npm test      # Node built-in test runner: status logic, event upsert, buckets, filters
-npm run lint  # ESLint flat config over .js/.jsx
-npm run build # production build to dist/
+npm test      # Pengujian bawaan Node: status, kejadian, agregasi, filter, bahasa/pencarian
+npm run lint  # ESLint untuk .js/.jsx
+npm run build # Hasil produksi di dist/
 ```
 
-There is no typecheck, CI, or pre-commit hook.
+Tidak ada pemeriksaan tipe, CI, maupun hook sebelum commit. Peringatan ukuran bundel JavaScript di atas 500 kB berasal terutama dari MQTT dan bukan kegagalan build.
 
-## Session-only data
+## Data hanya selama sesi
 
-Telemetry history and events live in React state only. Reloading the page clears them. Events are not retained by the firmware, so a dashboard opened during an incident may show the current gas status without the earlier event rows. The UI labels this scope in the Event Log; the dashboard's event counts are likewise session-scoped.
+Riwayat telemetri dan kejadian hanya tersimpan dalam state React. Memuat ulang halaman menghapusnya; tidak ada localStorage atau data contoh. Karena kejadian tidak disimpan broker, dasbor yang dibuka saat insiden berlangsung dapat menampilkan status gas saat ini tanpa baris kejadian sebelumnya. Riwayat Kejadian menjelaskan cakupan sesi ini; hitungan kejadian juga terbatas pada sesi yang diterima.
 
-## Structure
+## Struktur
 
 ```text
 src/
-  assets/                   original logo_brand.png and cropped logo-mark.png
+  assets/                     logo_brand.png asli dan logo-mark.png hasil pemotongan
   components/
-    charts/                 GasChart, GasGauge, RangeSelect
-    events/                 EventsTable, EventFilter
-    ui/                     CustomSelect, Icon, PageHeader
-  config.js                 MQTT URL, topics, thresholds, limits
-  context/                  IotProvider and shared context; session state and derived data
-  hooks/useIot.js            context hook
-  layouts/DashboardLayout.jsx  shell, brand, nav, connection pill
+    charts/                   GasChart, GasGauge, RangeSelect
+    events/                   EventsTable, EventFilter
+    ui/                       CustomSelect, Icon, PageHeader
+  config.js                   URL MQTT, topik, ambang, batas data
+  context/                    IotProvider; state sesi dan data turunan
+  hooks/useIot.js              akses konteks
+  layouts/DashboardLayout.jsx  kerangka, merek, navigasi, koneksi, gulir
   pages/
-    dashboard/              index.jsx and page-local components (KPIs, banners)
-    analytics/index.jsx     Analytics route
-    event-log/index.jsx     Event Log route
-  services/mqtt.js          MQTT transport, subscriptions, lifecycle cleanup
-  styles/index.css          Tailwind theme and motion
-  utils/iot.js              status/threshold logic, event upsert, minute buckets, formatting
-  utils/csv.js              event/history CSV export
-public/                    favicon.png and apple-touch-icon.png
-scripts/simulate.mjs        firmware-compatible MQTT publisher
-tests/iot.test.js           core logic tests
+    dashboard/                index.jsx dan komponen kartu/banner lokal
+    analytics/index.jsx       halaman Analisis
+    event-log/index.jsx       halaman Riwayat Kejadian
+  services/mqtt.js            koneksi, langganan, cleanup MQTT
+  styles/index.css            tema Tailwind dan animasi
+  utils/iot.js                status, kejadian, agregasi, format, bahasa, filter/pencarian
+  utils/csv.js                ekspor kejadian/riwayat CSV
+public/                       favicon.png dan apple-touch-icon.png
+scripts/simulate.mjs          pengirim MQTT yang kompatibel dengan firmware
+tests/iot.test.js             pengujian logika inti
 ```
 
-`@/` resolves to `src/` through Vite and `jsconfig.json`. Node-imported utilities keep relative imports so the tests and simulator do not need an alias loader.
+Alias `@/` mengarah ke `src/` melalui Vite dan `jsconfig.json`. Utilitas yang diimpor Node tetap memakai impor relatif agar pengujian dan simulator tidak memerlukan pemuat alias.
 
-Styling is Tailwind v4 via `@tailwindcss/vite` with CSS-first theme tokens in `src/styles/index.css`. The JSX runtime is automatic; do not `import React` in `.jsx` files. Branding and both public icons are cropped from the supplied logo; the original asset remains unchanged.
+Tampilan menggunakan Tailwind v4 melalui `@tailwindcss/vite` dengan token tema CSS di `src/styles/index.css`. Runtime JSX bersifat otomatis; jangan menambahkan `import React` ke berkas `.jsx`.
 
-The public HiveMQ broker is a shared demo service. For production, use a private broker with TLS and credentials, and set `VITE_MQTT_URL` / `VITE_MQTT_TOPIC_PREFIX` accordingly.
+HiveMQ publik merupakan layanan demonstrasi bersama. Untuk produksi, gunakan broker privat dengan TLS dan kredensial, lalu sesuaikan `VITE_MQTT_URL` / `VITE_MQTT_TOPIC_PREFIX`.

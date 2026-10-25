@@ -30,16 +30,14 @@ export default function ConnectionNotice() {
         <p className="mt-0.5 text-body-sm leading-5 opacity-90">
           {waiting
             ? telemetry
-              ? `Telemetry is delayed. Last data ${formatAgo(telemetry.receivedAt, now)} from ${telemetry.device || "the device"}.`
-              : "Connected to MQTT. Waiting for the first telemetry message."
-            : "No data from the device for 10 seconds. Check that the simulation is running and the MQTT topic matches."}
+              ? `Telemetri terlambat. Data terakhir ${formatAgo(telemetry.receivedAt, now)} dari ${telemetry.device || "perangkat"}.`
+              : "Terhubung ke MQTT. Menunggu pesan telemetri pertama."
+            : "Tidak ada data baru dari perangkat. Pastikan perangkat atau simulasi berjalan dan topik MQTT sesuai."}
         </p>
       </div>
       {age != null && (
         <span className="ml-auto hidden whitespace-nowrap pt-1 text-label-md font-semibold opacity-80 sm:block">
-          {age < 60_000
-            ? `${Math.round(age / 1000)}s ago`
-            : `${Math.round(age / 60_000)} min ago`}
+          {formatAgo(telemetry.receivedAt, now)}
         </span>
       )}
     </div>

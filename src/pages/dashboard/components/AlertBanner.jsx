@@ -38,7 +38,7 @@ export default function AlertBanner() {
   const meta = STATUS_META[status];
   const detail = [
     `${telemetry.gas}% gas`,
-    telemetry.interlock ? "Interlock on" : "Interlock off",
+    telemetry.interlock ? "Pengaman aktif" : "Pengaman nonaktif",
   ].join(" · ");
 
   return (

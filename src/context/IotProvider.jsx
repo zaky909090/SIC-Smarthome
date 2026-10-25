@@ -92,8 +92,8 @@ function buildConnection(state, telemetryAge) {
   if (state.mqttStatus === "connecting") {
     return {
       state: "connecting",
-      label: "Connecting…",
-      detail: "Opening MQTT connection",
+      label: "Menghubungkan…",
+      detail: "Membuka koneksi MQTT",
       dotClass: "bg-text-muted",
     };
   }
@@ -101,8 +101,8 @@ function buildConnection(state, telemetryAge) {
   if (state.mqttStatus !== "connected") {
     return {
       state: "offline",
-      label: "MQTT offline",
-      detail: "Reconnecting to the broker",
+      label: "MQTT terputus",
+      detail: "Menghubungkan ulang ke broker",
       dotClass: "bg-status-danger",
     };
   }
@@ -113,8 +113,8 @@ function buildConnection(state, telemetryAge) {
   ) {
     return {
       state: "offline",
-      label: "Device offline",
-      detail: "Last-will message received",
+      label: "Perangkat terputus",
+      detail: "Pesan putus koneksi perangkat diterima",
       dotClass: "bg-status-danger",
     };
   }
@@ -122,8 +122,8 @@ function buildConnection(state, telemetryAge) {
   if (telemetryAge == null) {
     return {
       state: "waiting",
-      label: "Waiting for data",
-      detail: "No telemetry received yet",
+      label: "Menunggu data",
+      detail: "Belum ada telemetri yang diterima",
       dotClass: "bg-status-warning animate-pulse",
     };
   }
@@ -131,8 +131,8 @@ function buildConnection(state, telemetryAge) {
   if (telemetryAge <= WAITING_AFTER_MS) {
     return {
       state: "online",
-      label: "MQTT connected",
-      detail: "Live telemetry",
+      label: "MQTT terhubung",
+      detail: "Telemetri langsung",
       dotClass: "bg-status-normal",
     };
   }
@@ -140,16 +140,16 @@ function buildConnection(state, telemetryAge) {
   if (telemetryAge <= STALE_AFTER_MS) {
     return {
       state: "waiting",
-      label: "Waiting for data",
-      detail: "Telemetry is delayed",
+      label: "Menunggu data",
+      detail: "Telemetri terlambat",
       dotClass: "bg-status-warning animate-pulse",
     };
   }
 
   return {
     state: "offline",
-    label: "Device offline",
-    detail: "No telemetry for 10 seconds",
+    label: "Perangkat terputus",
+    detail: "Tidak ada telemetri selama 10 detik",
     dotClass: "bg-status-danger",
   };
 }

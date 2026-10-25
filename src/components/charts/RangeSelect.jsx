@@ -9,7 +9,7 @@ const OPTIONS = Object.entries(RANGES).map(([value, range]) => ({
 export default function RangeSelect({
   value,
   onChange,
-  ariaLabel = "Time range",
+  ariaLabel = "Rentang waktu",
   showIcon = true,
 }) {
   return (

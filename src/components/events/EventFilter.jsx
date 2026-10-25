@@ -1,19 +1,24 @@
 import { useEffect, useRef } from "react";
 import CustomSelect from "@/components/ui/CustomSelect.jsx";
 import Icon from "@/components/ui/Icon.jsx";
-import { countActiveFilters, EMPTY_FILTER } from "@/utils/iot.js";
+import {
+  CATEGORY_LABELS,
+  countActiveFilters,
+  EMPTY_FILTER,
+  SOURCE_LABELS,
+  STATE_LABELS,
+} from "@/utils/iot.js";
 
-const CATEGORIES = ["Warning", "Danger", "Interlock", "Reset", "Info"].map(
-  (value) => ({ value, label: value }),
+const CATEGORIES = Object.entries(CATEGORY_LABELS).map(
+  ([value, label]) => ({ value, label }),
 );
-const STATES = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "RESOLVED", label: "Resolved" },
-  { value: "INTERRUPTED", label: "Interrupted" },
-];
-const SOURCES = ["MQ-2 sensor", "System", "Button"].map((value) => ({
+const STATES = Object.entries(STATE_LABELS).map(([value, label]) => ({
   value,
-  label: value,
+  label,
+}));
+const SOURCES = Object.entries(SOURCE_LABELS).map(([value, label]) => ({
+  value,
+  label,
 }));
 
 function Field({ label, value, onChange, options }) {
@@ -25,8 +30,8 @@ function Field({ label, value, onChange, options }) {
       <CustomSelect
         value={value}
         onChange={onChange}
-        options={[{ value: "All", label: "All" }, ...options]}
-        ariaLabel={`${label} filter`}
+        options={[{ value: "All", label: "Semua" }, ...options]}
+        ariaLabel={`Saring ${label.toLowerCase()}`}
         variant="field"
       />
     </div>
@@ -92,7 +97,7 @@ export default function EventFilter({ filter, onFilterChange }) {
       <div className="filter-panel absolute z-40 mt-2 w-[280px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-bg-card p-4 shadow-tooltip" style={{ right: "var(--filter-right, 0px)" }}>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-title-md font-bold text-text-primary">
-            Event filters
+            Saring Kejadian
           </p>
           <button
             type="button"
@@ -100,13 +105,13 @@ export default function EventFilter({ filter, onFilterChange }) {
             onClick={() => onFilterChange(EMPTY_FILTER)}
             className="text-label-sm font-semibold text-primary transition hover:text-primary-hover disabled:cursor-not-allowed disabled:text-text-muted"
           >
-            Clear
+            Bersihkan
           </button>
         </div>
 
         <div className="space-y-3">
           <Field
-            label="Category"
+            label="Kategori"
             value={filter.category}
             onChange={(value) => update("category", value)}
             options={CATEGORIES}
@@ -118,7 +123,7 @@ export default function EventFilter({ filter, onFilterChange }) {
             options={STATES}
           />
           <Field
-            label="Source"
+            label="Sumber"
             value={filter.source}
             onChange={(value) => update("source", value)}
             options={SOURCES}

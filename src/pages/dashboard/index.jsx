@@ -22,8 +22,8 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader
-        title="Gas Safety Overview"
-        subtitle="Real-time gas leak monitoring and automatic protection"
+        title="Ringkasan Keamanan Gas"
+        subtitle="Pemantauan kebocoran gas secara langsung dan perlindungan otomatis"
         range={range}
         onRangeChange={setRange}
         filter={filter}
@@ -45,8 +45,8 @@ export default function Dashboard() {
       </section>
 
       <EventsTable
-        title="Recent events"
-        subtitle="Live stream of gas threshold alarms, valve toggles, and hardware fail-safes"
+        title="Kejadian Terbaru"
+        subtitle="Pembaruan alarm gas, perubahan katup, dan pengaman perangkat"
         pageSize={5}
         filter={filter}
         onFilterChange={setFilter}

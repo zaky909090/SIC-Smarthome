@@ -60,7 +60,7 @@ function StatusCard({ telemetry, connection }) {
 
       <div className="relative flex items-center justify-between gap-3">
         <span className={`text-title-md font-medium ${titleClass}`}>
-          System status
+          Status Sistem
         </span>
         <span className="kpi-icon flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <Icon name="verified_user" className="text-[20px] text-white" />
@@ -86,18 +86,18 @@ function StatusCard({ telemetry, connection }) {
         >
           {telemetry
             ? telemetry.interlock
-              ? "Interlock on"
-              : "Interlock off"
+              ? "Pengaman aktif"
+              : "Pengaman nonaktif"
             : connection.label}
         </span>
       </div>
 
       <Footer className={footerClass}>
         <span>
-          {telemetry ? `Since ${formatClock(telemetry.statusSince)}` : "Awaiting telemetry"}
+          {telemetry ? `Sejak ${formatClock(telemetry.statusSince)}` : "Menunggu telemetri"}
         </span>
         <span className="text-[11px] font-medium">
-          {telemetry ? `${telemetry.gas}% gas` : "No reading"}
+          {telemetry ? `${telemetry.gas}% gas` : "Belum ada pembacaan"}
         </span>
       </Footer>
     </div>
@@ -107,17 +107,17 @@ function StatusCard({ telemetry, connection }) {
 function ValveCard({ telemetry, now }) {
   const open = telemetry?.valve === "OPEN";
   const lastChange = telemetry
-    ? `Last change ${formatAgo(telemetry.valveChangedAt, now)}`
-    : "No telemetry";
+    ? `Terakhir diubah ${formatAgo(telemetry.valveChangedAt, now)}`
+    : "Belum ada telemetri";
 
   return (
     <Card>
-      <CardHeader label="Valve" icon="valve" />
+      <CardHeader label="Katup" icon="valve" />
 
       <div className="my-4">
         <div className="flex items-baseline gap-2.5">
           <span className="text-[28px] font-bold leading-9 tracking-tight text-text-primary sm:text-metric-num">
-            {telemetry ? (open ? "Open" : "Closed") : "—"}
+            {telemetry ? (open ? "Terbuka" : "Tertutup") : "—"}
           </span>
           <span
             className={`rounded-full px-2.5 py-0.5 text-label-sm ${
@@ -132,21 +132,14 @@ function ValveCard({ telemetry, now }) {
         <p className="mt-1 text-body-sm text-text-muted">
           {telemetry
             ? open
-              ? "Gas line is open"
-              : "Gas line is closed"
-            : "Waiting for valve state"}
+              ? "Saluran gas terbuka"
+              : "Saluran gas tertutup"
+            : "Menunggu status katup"}
         </p>
       </div>
 
       <Footer>
         <span>{lastChange}</span>
-        <span className="flex items-center gap-1">
-          <Icon
-            name={open ? "check_circle" : "radio_button_unchecked"}
-            className={`text-[16px] ${open ? "text-status-normal" : "text-text-muted"}`}
-          />
-          {telemetry ? (telemetry.valveOn ? "Switch on" : "Switch off") : "—"}
-        </span>
       </Footer>
     </Card>
   );
@@ -160,19 +153,19 @@ function PurgeCard({ telemetry, now, live }) {
   const runtime = active ? formatDuration(now - telemetry.purgeSince) : null;
 
   const description = !telemetry
-    ? "Waiting for relay state"
+    ? "Menunggu status relai"
     : relays === 2
-      ? "Purge and blower are running"
+      ? "Pembuangan gas dan kipas bekerja"
       : relays === 1
         ? telemetry.relayPurge
-          ? "Purge relay is on"
-          : "Blower relay is on"
-        : "Both relays are off";
+          ? "Relai pembuangan gas aktif"
+          : "Relai kipas aktif"
+        : "Kedua relai nonaktif";
 
   return (
     <Card>
       <CardHeader
-        label="Purge and blower"
+        label="Pembuangan & Kipas"
         icon="mode_fan"
         iconClass={`bg-brand-100 text-primary ${active && live ? "animate-spin [animation-duration:4s]" : ""}`}
       />
@@ -180,7 +173,7 @@ function PurgeCard({ telemetry, now, live }) {
       <div className="my-4">
         <div className="flex items-baseline gap-2.5">
           <span className="text-[28px] font-bold leading-9 tracking-tight text-text-primary sm:text-metric-num">
-            {telemetry ? (active ? "On" : "Off") : "—"}
+            {telemetry ? (active ? "Nyala" : "Mati") : "—"}
           </span>
           <span
             className={`rounded-full px-2.5 py-0.5 text-label-sm ${
@@ -189,20 +182,20 @@ function PurgeCard({ telemetry, now, live }) {
                 : "bg-bg-subtle font-medium text-text-secondary"
             }`}
           >
-            {telemetry ? (active ? (telemetry.interlock ? "Interlock" : "Active") : "Idle") : "—"}
+            {telemetry ? (active ? (telemetry.interlock ? "Pengaman" : "Aktif") : "Siaga") : "—"}
           </span>
         </div>
         <p className="mt-1 text-body-sm text-text-muted">{description}</p>
       </div>
 
       <Footer>
-        <span>{runtime ? `Runtime ${runtime}` : telemetry ? "Runtime: Idle" : "Runtime: —"}</span>
+        <span>{runtime ? `Durasi ${runtime}` : telemetry ? "Durasi: Siaga" : "Durasi: —"}</span>
         <span className="text-[11px]">
           {telemetry
             ? relays > 0
-              ? `${relays} relay${relays === 1 ? "" : "s"} on`
-              : "No relay active"
-            : "No relay data"}
+              ? `${relays} relai aktif`
+              : "Relai tidak aktif"
+            : "Belum ada data relai"}
         </span>
       </Footer>
     </Card>
@@ -219,15 +212,15 @@ function AlertsCard({ summary, telemetry }) {
       ? STATUS_META[hazard].softClass
       : "bg-status-normal/10 text-status-normal-strong";
   const badgeText = hasActive
-    ? `${summary.activeAlerts} active`
+    ? `${summary.activeAlerts} aktif`
     : hazard
-      ? "Current hazard"
-      : "None active";
+      ? "Bahaya terdeteksi"
+      : "Tidak ada";
 
   return (
     <Card>
       <CardHeader
-        label="Alerts today"
+        label="Peringatan Hari Ini"
         icon="notifications_active"
         iconClass="bg-primary-container text-white"
       />
@@ -244,14 +237,14 @@ function AlertsCard({ summary, telemetry }) {
           </span>
         </div>
         <p className="mt-1 text-body-sm text-text-muted">
-          {summary.resolvedToday} resolved today
+          {summary.resolvedToday} selesai hari ini
         </p>
       </div>
 
       <Footer>
-        <span>Since 00:00 local time</span>
+        <span>Sejak 00.00 waktu setempat</span>
         <span className="text-[11px]">
-          {summary.totalToday} event{summary.totalToday === 1 ? "" : "s"} today
+          {summary.totalToday} kejadian hari ini
         </span>
       </Footer>
     </Card>
@@ -263,7 +256,7 @@ export default function KpiCards() {
 
   return (
     <section
-      aria-label="System metrics"
+      aria-label="Ringkasan sistem"
       className="kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       <StatusCard telemetry={telemetry} connection={connection} />
