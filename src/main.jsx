@@ -1,10 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import "@/styles/index.css";
+import App from "@/App.jsx";
+import { IotProvider } from "@/context/IotProvider.jsx";
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
+    <IotProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </IotProvider>
   </StrictMode>,
-)
+);
